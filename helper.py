@@ -163,7 +163,7 @@ def _add_basemap(ax, region, background="satellite", tiles_zoom=12,
     if coastlines:
         ax.coastlines(resolution="110m", color="black", linewidth=0.6, zorder=2)
     if borders and cfeature is not None:
-        ax.add_feature(cfeature.BORDERS, linestyle=":", linewidth=0.5, zorder=4)
+        ax.add_feature(cfeature.BORDERS, linestyle=":", linewidth=0.5, zorder=5)
     if land and cfeature is not None:
         ax.add_feature(cfeature.LAND, facecolor="lightgray", alpha=0.2, zorder=1)
     if gridlines:
@@ -299,6 +299,9 @@ def animate_panels(
     writer="pillow",
     dpi=120,
     ncols=None,
+    add_colorbar=True,
+    cbar_kwargs=None,
+    cbar_labels=None,
 ):
     """Animate time-evolving maps for one or more DataArrays side-by-side.
 
@@ -336,6 +339,7 @@ def animate_panels(
     axes = np.atleast_1d(axes).ravel().tolist()
 
     images = []
+    cbars = []
     used_axes = 0
     for i, (ax, da, title) in enumerate(zip(axes, da_list, titles)):
         _add_basemap(ax, region, background=background, tiles_zoom=tiles_zoom)
@@ -353,6 +357,21 @@ def animate_panels(
         )
         images.append(im)
         used_axes += 1
+
+        # Colorbar per panel
+        if add_colorbar:
+            ck = cbar_kwargs or {}
+            try:
+                cbar = fig.colorbar(im, ax=ax, **ck)
+                if cbar_labels is not None:
+                    # Support list of labels or single string
+                    if isinstance(cbar_labels, (list, tuple)) and i < len(cbar_labels):
+                        cbar.set_label(str(cbar_labels[i]))
+                    elif isinstance(cbar_labels, str):
+                        cbar.set_label(cbar_labels)
+                cbars.append(cbar)
+            except Exception:
+                pass
 
         if crosshair is not None:
             cln, clt = crosshair
@@ -404,6 +423,9 @@ def interactive_panels(
     vmin=None,
     vmax=None,
     ncols=None,
+    add_colorbar=True,
+    cbar_kwargs=None,
+    cbar_labels=None,
 ):
     """Interactive slider to browse time for one or more DataArrays.
 
@@ -443,7 +465,7 @@ def interactive_panels(
         used_axes = 0
         for idx, (ax, da, title) in enumerate(zip(axes, da_list, titles)):
             _add_basemap(ax, region, background=None)
-            ax.imshow(
+            im = ax.imshow(
                 da.isel(time=i).values,
                 origin="upper",
                 transform=ccrs.PlateCarree(),
@@ -452,6 +474,17 @@ def interactive_panels(
                 vmin=vmin_list[idx],
                 vmax=vmax_list[idx],
             )
+            if add_colorbar:
+                ck = cbar_kwargs or {}
+                try:
+                    cbar = fig.colorbar(im, ax=ax, **ck)
+                    if cbar_labels is not None:
+                        if isinstance(cbar_labels, (list, tuple)) and idx < len(cbar_labels):
+                            cbar.set_label(str(cbar_labels[idx]))
+                        elif isinstance(cbar_labels, str):
+                            cbar.set_label(cbar_labels)
+                except Exception:
+                    pass
             if crosshair is not None:
                 cln, clt = crosshair
                 ax.plot(
