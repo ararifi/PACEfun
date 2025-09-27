@@ -2,6 +2,20 @@
 import numpy as np
 import xarray as xr
 
+# Optional plotting imports (only used by plotting helpers)
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.animation as animation
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+    import cartopy.io.img_tiles as cimgt
+except Exception:  # Keep helper importable even without plotting deps
+    plt = None
+    animation = None
+    ccrs = None
+    cfeature = None
+    cimgt = None
+
 def get_wv_idx(path, wv):
     dt = xr.open_datatree(path)
     return dt["sensor_band_parameters"].wavelength3d.get_index("wavelength3d").get_loc(wv)
@@ -121,3 +135,289 @@ def grid_aligned_subset(bbox, transform, shape):
     # Window indices you can use to slice arrays
     window = dict(row_off=row_off, col_off=col_off, height=rows, width=cols)
     return new_shape, new_transform, window
+
+
+# -----------------------------
+# Plotting helper functions
+# -----------------------------
+
+def _require_plotting_backends():
+    if plt is None or ccrs is None:
+        raise ImportError(
+            "Plotting requires matplotlib and cartopy to be installed."
+        )
+
+
+def _add_basemap(ax, region, background="satellite", tiles_zoom=12,
+                 coastlines=True, borders=True, land=True, gridlines=True):
+    if background and background.lower() in {"sat", "satellite"} and cimgt is not None:
+        try:
+            tiler = cimgt.GoogleTiles(style="satellite")
+            ax.add_image(tiler, tiles_zoom)
+        except Exception:
+            # Fallback silently if tiles cannot load (e.g., no network)
+            pass
+
+    ax.set_extent([region[0], region[2], region[1], region[3]], crs=ccrs.PlateCarree())
+
+    if coastlines:
+        ax.coastlines(resolution="110m", color="black", linewidth=0.6, zorder=2)
+    if borders and cfeature is not None:
+        ax.add_feature(cfeature.BORDERS, linestyle=":", linewidth=0.5, zorder=4)
+    if land and cfeature is not None:
+        ax.add_feature(cfeature.LAND, facecolor="lightgray", alpha=0.2, zorder=1)
+    if gridlines:
+        try:
+            gl = ax.gridlines(draw_labels=True, linestyle="--")
+            gl.top_labels = False
+            gl.right_labels = False
+        except Exception:
+            pass
+
+
+def plot_mean_panels(
+    da_list,
+    region,
+    titles=None,
+    crosshair=None,
+    cmap="viridis",
+    vmin=None,
+    vmax=None,
+    robust=True,
+    background="satellite",
+    tiles_zoom=12,
+    figsize=(16, 6),
+    show=True,
+):
+    """Plot spatial mean maps for one or more DataArrays.
+
+    Parameters
+    ----------
+    da_list : list[xr.DataArray] | tuple
+        One or more processed DataArrays aligned to the same lon/lat grid.
+    region : tuple(lon_min, lat_min, lon_max, lat_max)
+        Geographic extent to display.
+    titles : list[str] | None
+        Panel titles; if None, indexes are used.
+    crosshair : tuple(lon, lat) | None
+        If provided, draw a "+" marker at this lon/lat.
+    cmap, vmin, vmax, robust :
+        Colormap and scaling options; if vmin/vmax are None, let xarray decide.
+    background : str | None
+        If "satellite", attempt to draw GoogleTiles satellite background.
+    tiles_zoom : int
+        Zoom level for background tiles.
+    figsize : tuple
+        Matplotlib figure size.
+    show : bool
+        Whether to call plt.show().
+
+    Returns
+    -------
+    fig, axes
+    """
+    _require_plotting_backends()
+
+    if not isinstance(da_list, (list, tuple)):
+        da_list = [da_list]
+
+    n = len(da_list)
+    if titles is None:
+        titles = [f"Panel {i+1}" for i in range(n)]
+
+    fig, axes = plt.subplots(1, n, figsize=figsize, subplot_kw={"projection": ccrs.PlateCarree()})
+    if n == 1:
+        axes = [axes]
+
+    for ax, da, title in zip(axes, da_list, titles):
+        _add_basemap(ax, region, background=background, tiles_zoom=tiles_zoom)
+        plot_da = da
+        if "time" in da.dims:
+            plot_da = da.mean("time")
+
+        plot_da.plot.imshow(
+            ax=ax,
+            transform=ccrs.PlateCarree(),
+            robust=robust,
+            cmap=cmap,
+            vmin=vmin,
+            vmax=vmax,
+            zorder=3,
+        )
+
+        if crosshair is not None:
+            cln, clt = crosshair
+            ax.plot(
+                cln,
+                clt,
+                transform=ccrs.PlateCarree(),
+                marker="+",
+                markersize=14,
+                mew=2,
+                mec="red",
+                mfc="none",
+                linestyle="none",
+                zorder=4,
+            )
+        ax.set_title(title)
+
+    if show:
+        plt.show()
+    return fig, axes
+
+
+def animate_panels(
+    da_list,
+    region,
+    titles=None,
+    crosshair=None,
+    cmap="viridis",
+    vmin=None,
+    vmax=None,
+    interval=600,
+    background=None,
+    tiles_zoom=12,
+    save_path=None,
+    writer="pillow",
+    dpi=120,
+):
+    """Animate time-evolving maps for one or more DataArrays side-by-side.
+
+    Expects each DataArray to have a "time" dimension and be on the same grid.
+
+    Parameters are similar to plot_mean_panels, with additional animation options.
+    If save_path is provided, the animation is saved using the requested writer.
+    Returns (fig, axes, ani).
+    """
+    _require_plotting_backends()
+    if animation is None:
+        raise ImportError("matplotlib.animation is required for animate_panels")
+
+    if not isinstance(da_list, (list, tuple)):
+        da_list = [da_list]
+    n = len(da_list)
+    if titles is None:
+        titles = [f"Panel {i+1}" for i in range(n)]
+
+    fig, axes = plt.subplots(1, n, figsize=(16, 6), subplot_kw={"projection": ccrs.PlateCarree()})
+    if n == 1:
+        axes = [axes]
+
+    images = []
+    for ax, da, title in zip(axes, da_list, titles):
+        _add_basemap(ax, region, background=background, tiles_zoom=tiles_zoom)
+
+        frame0 = da.isel(time=0)
+        im = ax.imshow(
+            frame0.values,
+            origin="upper",
+            transform=ccrs.PlateCarree(),
+            extent=[region[0], region[2], region[1], region[3]],
+            cmap=cmap,
+            vmin=vmin,
+            vmax=vmax,
+            zorder=3,
+        )
+        images.append(im)
+
+        if crosshair is not None:
+            cln, clt = crosshair
+            ax.plot(
+                cln,
+                clt,
+                transform=ccrs.PlateCarree(),
+                marker="+",
+                markersize=14,
+                mew=2,
+                mec="red",
+                mfc="none",
+                linestyle="none",
+                zorder=4,
+            )
+        ax.set_title(title)
+
+    time_coord = da_list[0].time
+
+    def update(frame):
+        for im, da in zip(images, da_list):
+            im.set_data(da.isel(time=frame).values)
+        try:
+            fig.suptitle(f"Time = {str(time_coord.values[frame])}")
+        except Exception:
+            pass
+        return images
+
+    ani = animation.FuncAnimation(
+        fig, update, frames=len(time_coord), interval=interval, blit=False
+    )
+
+    if save_path is not None:
+        ani.save(save_path, writer=writer, dpi=dpi)
+
+    return fig, axes, ani
+
+
+def interactive_panels(
+    da_list,
+    region,
+    titles=None,
+    crosshair=None,
+    cmap="viridis",
+    vmin=None,
+    vmax=None,
+):
+    """Interactive slider to browse time for one or more DataArrays.
+
+    Returns the ipywidgets controller. Works in notebooks.
+    """
+    _require_plotting_backends()
+    try:
+        import ipywidgets as widgets
+        from ipywidgets import interact
+    except Exception as e:
+        raise ImportError("interactive_panels requires ipywidgets in a notebook") from e
+
+    if not isinstance(da_list, (list, tuple)):
+        da_list = [da_list]
+    n = len(da_list)
+    if titles is None:
+        titles = [f"Panel {i+1}" for i in range(n)]
+
+    def plot_frame(i):
+        fig, axes = plt.subplots(1, n, figsize=(16, 6), subplot_kw={"projection": ccrs.PlateCarree()})
+        if n == 1:
+            axes = [axes]
+        for ax, da, title in zip(axes, da_list, titles):
+            _add_basemap(ax, region, background=None)
+            ax.imshow(
+                da.isel(time=i).values,
+                origin="upper",
+                transform=ccrs.PlateCarree(),
+                extent=[region[0], region[2], region[1], region[3]],
+                cmap=cmap,
+                vmin=vmin,
+                vmax=vmax,
+            )
+            if crosshair is not None:
+                cln, clt = crosshair
+                ax.plot(
+                    cln,
+                    clt,
+                    transform=ccrs.PlateCarree(),
+                    marker="+",
+                    markersize=14,
+                    mew=2,
+                    mec="red",
+                    mfc="none",
+                    linestyle="none",
+                    zorder=4,
+                )
+            ax.set_title(title)
+        try:
+            fig.suptitle(f"Time = {str(da_list[0].time.values[i])}")
+        except Exception:
+            pass
+        plt.show()
+
+    slider = widgets.IntSlider(min=0, max=len(da_list[0].time) - 1, step=1, value=0)
+    return interact(plot_frame, i=slider)
