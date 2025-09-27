@@ -1,9 +1,13 @@
+# HELPER
+import numpy as np
+import xarray as xr
 
 def get_wv_idx(path, wv):
     dt = xr.open_datatree(path)
     return dt["sensor_band_parameters"].wavelength3d.get_index("wavelength3d").get_loc(wv)
 
 def time_from_attr(ds):
+    
     """Set the start time attribute as a dataset variable.
 
     Parameters
@@ -29,6 +33,7 @@ def grid_match(path, dst_crs, dst_shape, dst_transform, var, wv_idx=None):
         da = dt["navigation_data"]
     else:
         da = None  # or raise an error / handle differently
+        return
         
         
     da = da[var]
@@ -105,11 +110,6 @@ def grid_aligned_subset(bbox, transform, shape):
     row_max = int(np.ceil(r1))
 
     # Clamp the *max* values, not the offsets
-    print(col_off)
-    #col_off = max(col_off, 0)
-    #row_off = max(row_off, 0)
-    #col_max = min(col_max, width)
-    #row_max = min(row_max, height)
 
     cols = max(0, col_max - col_off)
     rows = max(0, row_max - row_off)
