@@ -1,0 +1,6 @@
+1. Plot SPEXone AOD and AE side by side
+2. Make AOD and ( AE with SPEXone) around obilic take a certain radius and compute average by surface
+    -> plot the curve as a function of time
+    -> look also for specific modes
+3. Plot ERA5 data and oci aod next to each other is there any relationships?
+4. Use earthcare data to look into vertical profile after a specific region is picked

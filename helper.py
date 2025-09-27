@@ -188,6 +188,7 @@ def plot_mean_panels(
     tiles_zoom=12,
     figsize=(16, 6),
     show=True,
+    ncols=None,
 ):
     """Plot spatial mean maps for one or more DataArrays.
 
@@ -225,11 +226,24 @@ def plot_mean_panels(
     if titles is None:
         titles = [f"Panel {i+1}" for i in range(n)]
 
-    fig, axes = plt.subplots(1, n, figsize=figsize, subplot_kw={"projection": ccrs.PlateCarree()})
-    if n == 1:
-        axes = [axes]
+    # Normalize per-panel params
+    def _as_list(val, default, N):
+        if isinstance(val, (list, tuple, np.ndarray)):
+            return list(val)
+        return [default if val is None else val] * N
 
-    for ax, da, title in zip(axes, da_list, titles):
+    cmap_list = _as_list(cmap, "viridis", n)
+    vmin_list = _as_list(vmin, None, n)
+    vmax_list = _as_list(vmax, None, n)
+
+    # Grid layout
+    if ncols is None:
+        ncols = min(3, n)
+    nrows = int(np.ceil(n / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=figsize, subplot_kw={"projection": ccrs.PlateCarree()})
+    axes = np.atleast_1d(axes).ravel().tolist()
+
+    for i, (ax, da, title) in enumerate(zip(axes, da_list, titles)):
         _add_basemap(ax, region, background=background, tiles_zoom=tiles_zoom)
         plot_da = da
         if "time" in da.dims:
@@ -239,9 +253,9 @@ def plot_mean_panels(
             ax=ax,
             transform=ccrs.PlateCarree(),
             robust=robust,
-            cmap=cmap,
-            vmin=vmin,
-            vmax=vmax,
+            cmap=cmap_list[i],
+            vmin=vmin_list[i],
+            vmax=vmax_list[i],
             zorder=3,
         )
 
@@ -260,6 +274,10 @@ def plot_mean_panels(
                 zorder=4,
             )
         ax.set_title(title)
+
+    # Hide any unused axes if grid has extra slots
+    for j in range(len(da_list), len(axes)):
+        axes[j].set_visible(False)
 
     if show:
         plt.show()
@@ -280,6 +298,7 @@ def animate_panels(
     save_path=None,
     writer="pillow",
     dpi=120,
+    ncols=None,
 ):
     """Animate time-evolving maps for one or more DataArrays side-by-side.
 
@@ -299,12 +318,26 @@ def animate_panels(
     if titles is None:
         titles = [f"Panel {i+1}" for i in range(n)]
 
-    fig, axes = plt.subplots(1, n, figsize=(16, 6), subplot_kw={"projection": ccrs.PlateCarree()})
-    if n == 1:
-        axes = [axes]
+    # Normalize per-panel params
+    def _as_list(val, default, N):
+        if isinstance(val, (list, tuple, np.ndarray)):
+            return list(val)
+        return [default if val is None else val] * N
+
+    cmap_list = _as_list(cmap, "viridis", n)
+    vmin_list = _as_list(vmin, None, n)
+    vmax_list = _as_list(vmax, None, n)
+
+    # Grid layout
+    if ncols is None:
+        ncols = min(3, n)
+    nrows = int(np.ceil(n / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(16, 6), subplot_kw={"projection": ccrs.PlateCarree()})
+    axes = np.atleast_1d(axes).ravel().tolist()
 
     images = []
-    for ax, da, title in zip(axes, da_list, titles):
+    used_axes = 0
+    for i, (ax, da, title) in enumerate(zip(axes, da_list, titles)):
         _add_basemap(ax, region, background=background, tiles_zoom=tiles_zoom)
 
         frame0 = da.isel(time=0)
@@ -313,12 +346,13 @@ def animate_panels(
             origin="upper",
             transform=ccrs.PlateCarree(),
             extent=[region[0], region[2], region[1], region[3]],
-            cmap=cmap,
-            vmin=vmin,
-            vmax=vmax,
+            cmap=cmap_list[i],
+            vmin=vmin_list[i],
+            vmax=vmax_list[i],
             zorder=3,
         )
         images.append(im)
+        used_axes += 1
 
         if crosshair is not None:
             cln, clt = crosshair
@@ -335,6 +369,10 @@ def animate_panels(
                 zorder=4,
             )
         ax.set_title(title)
+
+    # Hide unused axes
+    for j in range(used_axes, len(axes)):
+        axes[j].set_visible(False)
 
     time_coord = da_list[0].time
 
@@ -365,6 +403,7 @@ def interactive_panels(
     cmap="viridis",
     vmin=None,
     vmax=None,
+    ncols=None,
 ):
     """Interactive slider to browse time for one or more DataArrays.
 
@@ -385,19 +424,33 @@ def interactive_panels(
         titles = [f"Panel {i+1}" for i in range(n)]
 
     def plot_frame(i):
-        fig, axes = plt.subplots(1, n, figsize=(16, 6), subplot_kw={"projection": ccrs.PlateCarree()})
-        if n == 1:
-            axes = [axes]
-        for ax, da, title in zip(axes, da_list, titles):
+        # Normalize per-panel params on creation time to allow arrays
+        def _as_list(val, default, N):
+            if isinstance(val, (list, tuple, np.ndarray)):
+                return list(val)
+            return [default if val is None else val] * N
+
+        cmap_list = _as_list(cmap, "viridis", n)
+        vmin_list = _as_list(vmin, None, n)
+        vmax_list = _as_list(vmax, None, n)
+
+        # Grid layout
+        nc = ncols if ncols is not None else min(3, n)
+        nr = int(np.ceil(n / nc))
+        fig, axes = plt.subplots(nr, nc, figsize=(16, 6), subplot_kw={"projection": ccrs.PlateCarree()})
+        axes = np.atleast_1d(axes).ravel().tolist()
+
+        used_axes = 0
+        for idx, (ax, da, title) in enumerate(zip(axes, da_list, titles)):
             _add_basemap(ax, region, background=None)
             ax.imshow(
                 da.isel(time=i).values,
                 origin="upper",
                 transform=ccrs.PlateCarree(),
                 extent=[region[0], region[2], region[1], region[3]],
-                cmap=cmap,
-                vmin=vmin,
-                vmax=vmax,
+                cmap=cmap_list[idx],
+                vmin=vmin_list[idx],
+                vmax=vmax_list[idx],
             )
             if crosshair is not None:
                 cln, clt = crosshair
@@ -414,6 +467,10 @@ def interactive_panels(
                     zorder=4,
                 )
             ax.set_title(title)
+            used_axes += 1
+
+        for j in range(used_axes, len(axes)):
+            axes[j].set_visible(False)
         try:
             fig.suptitle(f"Time = {str(da_list[0].time.values[i])}")
         except Exception:
