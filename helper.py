@@ -374,6 +374,7 @@ def interactive_panels(
     try:
         import ipywidgets as widgets
         from ipywidgets import interact
+        from IPython.display import display
     except Exception as e:
         raise ImportError("interactive_panels requires ipywidgets in a notebook") from e
 
@@ -420,4 +421,9 @@ def interactive_panels(
         plt.show()
 
     slider = widgets.IntSlider(min=0, max=len(da_list[0].time) - 1, step=1, value=0)
-    return interact(plot_frame, i=slider)
+    ctrl = interact(plot_frame, i=slider)
+    try:
+        display(ctrl)
+    except Exception:
+        pass
+    return ctrl

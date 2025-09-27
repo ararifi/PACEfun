@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 import pandas as pd
+import sys
+sys.path.append("/home/jovyan/PACEfun")
 import helper
 from dask.distributed import Client
 
@@ -16,7 +18,7 @@ auth = earthaccess.login("login.netrc")
 # %%
 # --- TIME ---
 
-tspan = ("2024-09-01 00:00", "2025-03-01 00:00")
+tspan = ("2024-09-01 00:00", "2025-10-01 00:00")
 
 # --- REGION ---
 
