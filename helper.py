@@ -299,9 +299,6 @@ def animate_panels(
     writer="pillow",
     dpi=120,
     ncols=None,
-    add_colorbar=True,
-    cbar_kwargs=None,
-    cbar_labels=None,
 ):
     """Animate time-evolving maps for one or more DataArrays side-by-side.
 
@@ -339,7 +336,6 @@ def animate_panels(
     axes = np.atleast_1d(axes).ravel().tolist()
 
     images = []
-    cbars = []
     used_axes = 0
     for i, (ax, da, title) in enumerate(zip(axes, da_list, titles)):
         _add_basemap(ax, region, background=background, tiles_zoom=tiles_zoom)
@@ -357,21 +353,6 @@ def animate_panels(
         )
         images.append(im)
         used_axes += 1
-
-        # Colorbar per panel
-        if add_colorbar:
-            ck = cbar_kwargs or {}
-            try:
-                cbar = fig.colorbar(im, ax=ax, **ck)
-                if cbar_labels is not None:
-                    # Support list of labels or single string
-                    if isinstance(cbar_labels, (list, tuple)) and i < len(cbar_labels):
-                        cbar.set_label(str(cbar_labels[i]))
-                    elif isinstance(cbar_labels, str):
-                        cbar.set_label(cbar_labels)
-                cbars.append(cbar)
-            except Exception:
-                pass
 
         if crosshair is not None:
             cln, clt = crosshair
@@ -423,9 +404,6 @@ def interactive_panels(
     vmin=None,
     vmax=None,
     ncols=None,
-    add_colorbar=True,
-    cbar_kwargs=None,
-    cbar_labels=None,
 ):
     """Interactive slider to browse time for one or more DataArrays.
 
@@ -434,8 +412,8 @@ def interactive_panels(
     _require_plotting_backends()
     try:
         import ipywidgets as widgets
-        from ipywidgets import interact, interactive_output
-        from IPython.display import display, clear_output
+        from ipywidgets import interact
+        from IPython.display import display
     except Exception as e:
         raise ImportError("interactive_panels requires ipywidgets in a notebook") from e
 
@@ -445,12 +423,7 @@ def interactive_panels(
     if titles is None:
         titles = [f"Panel {i+1}" for i in range(n)]
 
-    out = widgets.Output()
-
     def plot_frame(i):
-        # render into the output area and replace previous frame
-        with out:
-            clear_output(wait=True)
         # Normalize per-panel params on creation time to allow arrays
         def _as_list(val, default, N):
             if isinstance(val, (list, tuple, np.ndarray)):
@@ -470,7 +443,7 @@ def interactive_panels(
         used_axes = 0
         for idx, (ax, da, title) in enumerate(zip(axes, da_list, titles)):
             _add_basemap(ax, region, background=None)
-            im = ax.imshow(
+            ax.imshow(
                 da.isel(time=i).values,
                 origin="upper",
                 transform=ccrs.PlateCarree(),
@@ -479,17 +452,6 @@ def interactive_panels(
                 vmin=vmin_list[idx],
                 vmax=vmax_list[idx],
             )
-            if add_colorbar:
-                ck = cbar_kwargs or {}
-                try:
-                    cbar = fig.colorbar(im, ax=ax, **ck)
-                    if cbar_labels is not None:
-                        if isinstance(cbar_labels, (list, tuple)) and idx < len(cbar_labels):
-                            cbar.set_label(str(cbar_labels[idx]))
-                        elif isinstance(cbar_labels, str):
-                            cbar.set_label(cbar_labels)
-                except Exception:
-                    pass
             if crosshair is not None:
                 cln, clt = crosshair
                 ax.plot(
@@ -513,13 +475,12 @@ def interactive_panels(
             fig.suptitle(f"Time = {str(da_list[0].time.values[i])}")
         except Exception:
             pass
-            plt.show()
+        plt.show()
 
     slider = widgets.IntSlider(min=0, max=len(da_list[0].time) - 1, step=1, value=0)
-    ctrl = interactive_output(plot_frame, {"i": slider})
-    ui = widgets.VBox([slider, out])
+    ctrl = interact(plot_frame, i=slider)
     try:
-        display(ui)
+        display(ctrl)
     except Exception:
         pass
-    return ui
+    return ctrl
