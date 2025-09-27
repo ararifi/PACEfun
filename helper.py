@@ -434,8 +434,8 @@ def interactive_panels(
     _require_plotting_backends()
     try:
         import ipywidgets as widgets
-        from ipywidgets import interact
-        from IPython.display import display
+        from ipywidgets import interact, interactive_output
+        from IPython.display import display, clear_output
     except Exception as e:
         raise ImportError("interactive_panels requires ipywidgets in a notebook") from e
 
@@ -445,7 +445,12 @@ def interactive_panels(
     if titles is None:
         titles = [f"Panel {i+1}" for i in range(n)]
 
+    out = widgets.Output()
+
     def plot_frame(i):
+        # render into the output area and replace previous frame
+        with out:
+            clear_output(wait=True)
         # Normalize per-panel params on creation time to allow arrays
         def _as_list(val, default, N):
             if isinstance(val, (list, tuple, np.ndarray)):
@@ -508,12 +513,13 @@ def interactive_panels(
             fig.suptitle(f"Time = {str(da_list[0].time.values[i])}")
         except Exception:
             pass
-        plt.show()
+            plt.show()
 
     slider = widgets.IntSlider(min=0, max=len(da_list[0].time) - 1, step=1, value=0)
-    ctrl = interact(plot_frame, i=slider)
+    ctrl = interactive_output(plot_frame, {"i": slider})
+    ui = widgets.VBox([slider, out])
     try:
-        display(ctrl)
+        display(ui)
     except Exception:
         pass
-    return ctrl
+    return ui
