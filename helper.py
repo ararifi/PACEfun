@@ -351,6 +351,18 @@ def animate_panels(
             vmax=vmax_list[i],
             zorder=3,
         )
+        # Add a colorbar per panel so it appears in the animation/GIF
+        try:
+            cbar = fig.colorbar(im, ax=ax, orientation="vertical", fraction=0.046, pad=0.04)
+            # Best-effort label from DataArray metadata
+            label = da.name if hasattr(da, "name") and da.name is not None else ""
+            units = da.attrs.get("units") if hasattr(da, "attrs") else None
+            if units:
+                label = f"{label} [{units}]".strip()
+            if label:
+                cbar.set_label(label)
+        except Exception:
+            pass
         images.append(im)
         used_axes += 1
 
@@ -373,6 +385,12 @@ def animate_panels(
     # Hide unused axes
     for j in range(used_axes, len(axes)):
         axes[j].set_visible(False)
+
+    # Improve layout so colorbars are not clipped in saved GIFs
+    try:
+        fig.tight_layout()
+    except Exception:
+        pass
 
     time_coord = da_list[0].time
 
@@ -443,7 +461,7 @@ def interactive_panels(
         used_axes = 0
         for idx, (ax, da, title) in enumerate(zip(axes, da_list, titles)):
             _add_basemap(ax, region, background=None)
-            ax.imshow(
+            im = ax.imshow(
                 da.isel(time=i).values,
                 origin="upper",
                 transform=ccrs.PlateCarree(),
@@ -452,6 +470,17 @@ def interactive_panels(
                 vmin=vmin_list[idx],
                 vmax=vmax_list[idx],
             )
+            # Add a colorbar per panel for the interactive view
+            try:
+                cbar = fig.colorbar(im, ax=ax, orientation="vertical", fraction=0.046, pad=0.04)
+                label = da.name if hasattr(da, "name") and da.name is not None else ""
+                units = da.attrs.get("units") if hasattr(da, "attrs") else None
+                if units:
+                    label = f"{label} [{units}]".strip()
+                if label:
+                    cbar.set_label(label)
+            except Exception:
+                pass
             if crosshair is not None:
                 cln, clt = crosshair
                 ax.plot(
@@ -473,6 +502,11 @@ def interactive_panels(
             axes[j].set_visible(False)
         try:
             fig.suptitle(f"Time = {str(da_list[0].time.values[i])}")
+        except Exception:
+            pass
+        # Avoid colorbar being cut off in the widget output
+        try:
+            fig.tight_layout()
         except Exception:
             pass
         plt.show()
