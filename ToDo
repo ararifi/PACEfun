@@ -1,6 +1,11 @@
 1. Plot SPEXone AOD and AE side by side
 2. Make AOD and ( AE with SPEXone) around obilic take a certain radius and compute average by surface
-    -> plot the curve as a function of time
+    -> plot the curve as a function of time, and as a function of radius, do we see any changes when we increase the radius
+    in theory it should change since the affect from the plant should change
     -> look also for specific modes
+    -> check for all coal plants on the balkan
+    -> add windspeed from previous time like a term for diffusion, use era5 data
+    It seems that aod values in the surroundings are greater than at the emitting side. However AE seems to show a better signal of emissions.
+TAKE quality flag into account!
 3. Plot ERA5 data and oci aod next to each other is there any relationships?
 4. Use earthcare data to look into vertical profile after a specific region is picked
