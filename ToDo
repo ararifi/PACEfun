@@ -4,6 +4,9 @@
     in theory it should change since the affect from the plant should change
     -> look also for specific modes
     -> check for all coal plants on the balkan
+    retrieved by chat gpt. It has its data from https://www.gem.wiki/, https://justapedia.org/, https://en.wikipedia.org/
+
+
     -> add windspeed from previous time like a term for diffusion, use era5 data
     It seems that aod values in the surroundings are greater than at the emitting side. However AE seems to show a better signal of emissions.
 TAKE quality flag into account!
