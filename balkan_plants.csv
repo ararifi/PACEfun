@@ -1,25 +1,25 @@
-Name,Year of Oldest Unit,Latitude,Longitude,Source
-Agios Dimitrios power station,1985,40.394185,21.924886,https://www.gem.wiki/Agios_Dimitrios_power_station
-Nikola Tesla power station,1970,44.671341,20.158418,https://www.gem.wiki/Nikola_Tesla_power_station
-Republika power station,1951,42.607124,23.078699,https://www.gem.wiki/Republika_power_station
-Kosovo A power station,1970,42.676454,21.085922,https://www.gem.wiki/Kosovo_A_power_station
-Bitola power station,1982,41.05832,21.484266,https://www.gem.wiki/Bitola_power_station
-Tuzla Thermal Power Plant,1966,44.52104,18.606443,https://www.gem.wiki/Tuzla_Thermal_Power_Plant
-Kakanj Thermal Power Plant,1969,44.089633,18.113865,https://www.gem.wiki/Kakanj_Thermal_Power_Plant
-Gacko Thermal Power Plant,1983,43.172137,18.511555,https://www.gem.wiki/Gacko_Thermal_Power_Plant
-Ugljevik power station,1985,44.683446,18.968516,https://www.gem.wiki/Ugljevik_power_station
-Maritsa Iztok-3 power station,1978,42.14502,26.003009,https://www.gem.wiki/Maritsa_Iztok-3_power_station
-Bobov Dol power station,1973,42.285818,23.03283,https://www.gem.wiki/Bobov_Dol_power_station
-Maritsa Iztok-1 power station,2011,42.1573,25.9084,https://www.gem.wiki/Maritsa_Iztok-1_power_station
-Kostolac power station,1967,44.723674,21.171605,https://www.gem.wiki/Kostolac_power_station
-Kolubara A power station,1956,44.480312,20.293538,https://www.gem.wiki/Kolubara_A_power_station
-Rovinari power station,1976,44.910633,23.134754,https://www.gem.wiki/Rovinari_power_station
-Craiova II power station,1987,44.34294,23.81076,https://www.gem.wiki/Craiova_II_power_station
-Turceni power station,1981,44.669722,23.407778,https://www.gem.wiki/Turceni_power_station
-Oslomej power station,1980,41.582,21.0,https://www.gem.wiki/Oslomej_power_station
-Sostanj power station,1977,46.3723,15.0534,https://www.gem.wiki/Sostanj_power_station
-Kosovo B power station,1983,42.69312,21.056002,https://www.gem.wiki/Kosovo_B_power_station
-Plomin power station,1969,45.136764,14.162702,https://www.gem.wiki/Plomin_power_station
-Ptolemaïda power station,2023,40.409707,21.787573,https://www.gem.wiki/Ptolema%C3%AFda_power_station
-Megalopoli power station,2008,37.417449,22.107892,https://www.gem.wiki/Megalopoli_power_station
-Maritsa Iztok-2 power station,1966,42.254053,26.134007,https://www.gem.wiki/Maritsa_Iztok-2_power_station
+Name,Country,Year of Oldest Unit,Latitude,Longitude,Source
+Agios Dimitrios power station,Greece,1985,40.394185,21.924886,https://www.gem.wiki/Agios_Dimitrios_power_station
+Nikola Tesla power station,Serbia,1970,44.671341,20.158418,https://www.gem.wiki/Nikola_Tesla_power_station
+Republika power station,Bulgaria,1951,42.607124,23.078699,https://www.gem.wiki/Republika_power_station
+Kosovo A power station,Kosovo,1970,42.676454,21.085922,https://www.gem.wiki/Kosovo_A_power_station
+Bitola power station,North Macedonia,1982,41.05832,21.484266,https://www.gem.wiki/Bitola_power_station
+Tuzla Thermal Power Plant,Bosnia and Herzegovina,1966,44.52104,18.606443,https://www.gem.wiki/Tuzla_Thermal_Power_Plant
+Kakanj Thermal Power Plant,Bosnia and Herzegovina,1969,44.089633,18.113865,https://www.gem.wiki/Kakanj_Thermal_Power_Plant
+Gacko Thermal Power Plant,Bosnia and Herzegovina,1983,43.172137,18.511555,https://www.gem.wiki/Gacko_Thermal_Power_Plant
+Ugljevik power station,Bosnia and Herzegovina,1985,44.683446,18.968516,https://www.gem.wiki/Ugljevik_power_station
+Maritsa Iztok-3 power station,Bulgaria,1978,42.14502,26.003009,https://www.gem.wiki/Maritsa_Iztok-3_power_station
+Bobov Dol power station,Bulgaria,1973,42.285818,23.03283,https://www.gem.wiki/Bobov_Dol_power_station
+Maritsa Iztok-1 power station,Bulgaria,2011,42.1573,25.9084,https://www.gem.wiki/Maritsa_Iztok-1_power_station
+Kostolac power station,Serbia,1967,44.723674,21.171605,https://www.gem.wiki/Kostolac_power_station
+Kolubara A power station,Serbia,1956,44.480312,20.293538,https://www.gem.wiki/Kolubara_A_power_station
+Rovinari power station,Romania,1976,44.910633,23.134754,https://www.gem.wiki/Rovinari_power_station
+Craiova II power station,Romania,1987,44.34294,23.81076,https://www.gem.wiki/Craiova_II_power_station
+Turceni power station,Romania,1981,44.669722,23.407778,https://www.gem.wiki/Turceni_power_station
+Oslomej power station,North Macedonia,1980,41.582,21.0,https://www.gem.wiki/Oslomej_power_station
+Sostanj power station,Slovenia,1977,46.3723,15.0534,https://www.gem.wiki/Sostanj_power_station
+Kosovo B power station,Kosovo,1983,42.69312,21.056002,https://www.gem.wiki/Kosovo_B_power_station
+Plomin power station,Croatia,1969,45.136764,14.162702,https://www.gem.wiki/Plomin_power_station
+Ptolemaïda power station,Greece,2023,40.409707,21.787573,https://www.gem.wiki/Ptolema%C3%AFda_power_station
+Megalopoli power station,Greece,2008,37.417449,22.107892,https://www.gem.wiki/Megalopoli_power_station
+Maritsa Iztok-2 power station,Bulgaria,1966,42.254053,26.134007,https://www.gem.wiki/Maritsa_Iztok-2_power_station
