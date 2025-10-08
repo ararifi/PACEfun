@@ -1,0 +1,10 @@
+region = (12.572136,35.345655,30.413933,49.060595) # bbox balkan region
+
+results_spx = earthaccess.search_data(
+short_name="PACE_SPEXONE_L2_AER_RTAPLAND",
+cloud_hosted=True,
+bounding_box=region,
+temporal=tspan,
+count=200,
+)
+paths_spx = earthaccess.open(results_spx)
