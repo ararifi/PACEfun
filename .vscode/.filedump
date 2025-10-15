@@ -1,0 +1,6 @@
+
+		begin
+      f = addfile("/projects/0/prjs1474/aarifi/PACEfun/balkan/oci/PACE_OCI.20240307.L3m.DAY.AER_UAA.V3_1.0p1deg.nc","r")
+      print(f)
+		end
+    

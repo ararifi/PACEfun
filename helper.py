@@ -33,8 +33,24 @@ def time_from_attr(ds):
     ds["time"] = ((), np.datetime64(datetime, "ns"))
     ds = ds.set_coords("time")
     return ds
+def time_from_attr_2(ds):
+    """
+    Extract time from the dataset's 'time_coverage_start' attribute 
+    and return it as a DataArray.
 
-def grid_match(path, dst_crs, dst_shape, dst_transform, var, wv_idx=None):
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        A dataset corresponding to a Level-2 granule.
+    """
+    datetime = ds.attrs["time_coverage_start"].replace("Z", "")
+    time_da = xr.DataArray(
+        np.datetime64(datetime, "ns"),
+        dims=(),
+        name="time"
+    )
+    return time_da
+def grid_match(path, dst_crs, dst_shape, dst_transform, var, wv_idx=None, quality=None):
     geoloc_group_name = 'geolocation_data'
     
     """Reproject a Level-2 granule to match a Level-3M-ish granule."""
@@ -48,9 +64,14 @@ def grid_match(path, dst_crs, dst_shape, dst_transform, var, wv_idx=None):
     else:
         da = None  # or raise an error / handle differently
         return
-        
-        
+    
+
     da = da[var]
+    
+    if quality is not None:
+        quality_flag = dt["diagnostic_data"]["quality_flag"]
+        da = da.where(quality_flag <= quality)
+    
     if wv_idx is not None:
         if "wavelength3d" in da.dims:
             da = da.sel(wavelength3d=wv_idx)

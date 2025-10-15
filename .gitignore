@@ -212,3 +212,6 @@ movies/
 plots/
 nc_files/
 on_server.ipynb
+balkan/
+*.sif
+login.netrc
