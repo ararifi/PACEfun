@@ -215,3 +215,7 @@ on_server.ipynb
 balkan/
 *.sif
 login.netrc
+*.csv
+*.zip
+chla_NAO/*
+*.nc

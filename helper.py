@@ -51,19 +51,15 @@ def time_from_attr_2(ds):
     )
     return time_da
 def grid_match(path, dst_crs, dst_shape, dst_transform, var, wv_idx=None, quality=None):
-    geoloc_group_name = 'geolocation_data'
+    dt = xr.open_datatree(path)
+    geoloc_group_name = next((g for g in ["/geolocation_data", "/navigation_data"] if g in dt.groups), None)
     
     """Reproject a Level-2 granule to match a Level-3M-ish granule."""
-    dt = xr.open_datatree(path)
    
-    
-    if "geophysical_data" in dt:
-        da = dt["geophysical_data"]
-    elif "navigation_data" in dt:
-        da = dt["navigation_data"]
-    else:
-        da = None  # or raise an error / handle differently
-        return
+    da = dt.get("geophysical_data")
+    if da is None:
+        # Handle missing data appropriately
+        return  # or raise ValueError("No valid data found in dt")
     
 
     da = da[var]
