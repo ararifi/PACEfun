@@ -1,6 +1,6 @@
 
 		begin
-      f = addfile("/projects/0/prjs1474/aarifi/PACEfun/chla_NAO/spexone_L3M/spexone_100_0.nc","r")
+      f = addfile("/projects/0/prjs1474/aarifi/PACEfun/chla_NAO/spexone_latest_L3M_processed/spexone_interp_0.1deg.nc","r")
       print(f)
 		end
     

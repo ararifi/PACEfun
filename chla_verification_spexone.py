@@ -1,4 +1,5 @@
 # %%
+# seq 0 37 | parallel -j 10 "python chla_verification_spexone.py {}"
 import earthaccess
 fs = earthaccess.get_fsspec_https_session()
 
@@ -23,8 +24,10 @@ region = (-88.242188, 4.214943, -2.988281, 44.465151)
 tspan = ("2024-09-01 00:00", "2024-11-01 00:00")
 
 # PATHS
-paths_spx_all = list(data_dir.glob("spexone/*"))
+paths_spx_all = list(data_dir.glob("spexone_latest/*"))
 paths_spx_all.sort()
+
+
 
 # Projection/grid template
 crs, shape_tmp, transform_tmp = crs_template(paths_spx_all[0], "chla")
@@ -32,7 +35,7 @@ shape, transform, _ = grid_aligned_subset(region, transform_tmp, shape_tmp)
 
 # %%
 # Batch handling
-batch_size = 100
+batch_size = 200
 
 # Take command-line arguments for batch index
 # Usage: python process_spexone_batch.py <batch_index>
@@ -42,6 +45,11 @@ if len(sys.argv) < 2:
 
 batch = int(sys.argv[1])
 
+output_path = interp_dir / f"spexone_latest_L3M/spexone_{batch_size}_{batch}.nc"
+if output_path.exists():
+    print(f"Skipping {output_path}, file already exists.")
+    exit(0) # or continue, depending on your context (function vs. loop)
+
 start_ind = batch * batch_size
 end_ind = min((batch + 1) * batch_size, len(paths_spx_all))
 
@@ -50,7 +58,7 @@ if start_ind >= len(paths_spx_all):
     sys.exit(0)
 
 paths_spx = paths_spx_all[start_ind:end_ind]
-output_path = interp_dir / f"spexone_L3M/spexone_{batch_size}_{batch}.nc"
+output_path = interp_dir / f"spexone_latest_L3M/spexone_{batch_size}_{batch}.nc"
 
 print(f"Processing batch {batch}: indices {start_ind}-{end_ind}, output -> {output_path}")
 

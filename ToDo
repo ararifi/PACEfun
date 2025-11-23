@@ -43,3 +43,24 @@ apptainer exec \
   --env REQUESTS_CA_BUNDLE=/srv/conda/envs/notebook/lib/python3.11/site-packages/certifi/cacert.pem \
   oceandata-notebooks.sif \
   jupyter lab --ip 0.0.0.0 --no-browser --notebook-dir=/projects/0/prjs1474/aarifi/PACEfun/
+
+
+apptainer shell \
+  -B "$PWD":/work \
+  --env SSL_CERT_FILE=/srv/conda/envs/notebook/lib/python3.11/site-packages/certifi/cacert.pem \
+  --env REQUESTS_CA_BUNDLE=/srv/conda/envs/notebook/lib/python3.11/site-packages/certifi/cacert.pem \
+  oceandata-notebooks.sif \
+  jupyter lab --ip 0.0.0.0 --no-browser --notebook-dir=/projects/0/prjs1474/aarifi/PACEfun/
+
+
+cd /tmp
+wget https://ftp.gnu.org/gnu/parallel/parallel-latest.tar.bz2
+tar -xjf parallel-latest.tar.bz2
+rm parallel-latest.tar.bz2
+cd parallel-*
+./configure --prefix=$HOME/.local
+make && make install
+export PATH=$HOME/.local/bin:$PATH 
+cd /work
+
+Next time resample with cdo!
